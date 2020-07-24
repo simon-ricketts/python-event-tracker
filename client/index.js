@@ -24,6 +24,7 @@ function addEventListenersToDOM() {
     clearTimeout(resizeTimeout);
     // Assuming only one resize occurs
     if (hasResized === false) {
+      // Add 300ms idle buffer to registering a resize to help ensure data is sent when resize is actually complete
       resizeTimeout = setTimeout(function () {
         postResizeData(window.innerHeight, window.innerWidth);
       }, 300);
