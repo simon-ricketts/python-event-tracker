@@ -1,7 +1,7 @@
 const serverUrl = "http://127.0.0.1:8000"; // Placeholder
 const sessionId = generateSessionId();
-const initialHeight = window.innerWidth;
-const initialWidth = window.innerHeight;
+const initialHeight = window.innerHeight;
+const initialWidth = window.innerWidth;
 
 let hasResized = false;
 let startTime;
@@ -14,7 +14,9 @@ document.addEventListener("DOMContentLoaded", function (event) {
 function addEventListenersToDOM() {
   document
     .getElementsByClassName("form-details")[0]
-    .addEventListener("submit", postTimerData);
+    .addEventListener("submit", function () {
+      postTimerData(event, Math.floor((Date.now() - startTime) / 1000));
+    });
 
   let resizeTimeout;
 
@@ -22,7 +24,9 @@ function addEventListenersToDOM() {
     clearTimeout(resizeTimeout);
     // Assuming only one resize occurs
     if (hasResized === false) {
-      resizeTimeout = setTimeout(postResizeData, 300);
+      resizeTimeout = setTimeout(function () {
+        postResizeData(window.innerHeight, window.innerWidth);
+      }, 300);
     }
   });
 
@@ -54,14 +58,14 @@ function generateSessionId() {
 
 // POST REQUESTS
 
-function postResizeData() {
+function postResizeData(finalHeight, finalWidth) {
   hasResized = true;
   let jsonRequest = {
     eventType: "resize",
     websiteUrl: window.location.href,
     sessionId: sessionId,
     initialDimensions: { height: initialHeight, width: initialWidth },
-    finalDimensions: { height: window.innerHeight, width: innerWidth },
+    finalDimensions: { height: finalHeight, width: finalWidth },
   };
   console.log(jsonRequest);
   axios.post(serverUrl, jsonRequest).then((error) => {
@@ -83,13 +87,13 @@ function postPasteData(elementId) {
   });
 }
 
-function postTimerData(event) {
+function postTimerData(event, totalTime) {
   event.preventDefault();
   let jsonRequest = {
     eventType: "timeTaken",
     websiteUrl: window.location.href,
     sessionId: sessionId,
-    time: Math.floor((Date.now() - startTime) / 1000),
+    time: totalTime,
   };
   console.log(jsonRequest);
   axios
