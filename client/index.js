@@ -8,16 +8,16 @@ let startTime;
 
 // Wait until DOM has fully loaded before attempting to apply event listeners to it
 document.addEventListener("DOMContentLoaded", function (event) {
-  const inputFields = document.getElementsByClassName("form-control");
-  addEventListenersToInputFields(inputFields);
+  addEventListenersToDOM();
 });
 
-function addEventListenersToInputFields(inputFields) {
+function addEventListenersToDOM() {
   document
     .getElementsByClassName("form-details")[0]
     .addEventListener("submit", postTimerData);
 
   let resizeTimeout;
+
   window.addEventListener("resize", function () {
     clearTimeout(resizeTimeout);
     // Assuming only one resize occurs
@@ -25,6 +25,8 @@ function addEventListenersToInputFields(inputFields) {
       resizeTimeout = setTimeout(postResizeData, 300);
     }
   });
+
+  const inputFields = document.getElementsByClassName("form-control");
 
   for (i = 0; i < inputFields.length; i++) {
     let inputFieldId = inputFields[i].id;
