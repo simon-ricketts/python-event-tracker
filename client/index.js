@@ -1,13 +1,14 @@
 const serverUrl = "http://127.0.0.1:8000"; // Placeholder
-const sessionId = generateSessionId();
 const initialHeight = window.innerHeight;
 const initialWidth = window.innerWidth;
 
+let sessionId;
 let hasResized = false;
 let startTime;
 
 // Wait until DOM has fully loaded before attempting to apply event listeners to it
-document.addEventListener("DOMContentLoaded", function (event) {
+document.addEventListener("DOMContentLoaded", async function (event) {
+  sessionId = await getSessionId();
   addEventListenersToDOM();
 });
 
@@ -24,7 +25,7 @@ function addEventListenersToDOM() {
     clearTimeout(resizeTimeout);
     // Assuming only one resize occurs
     if (hasResized === false) {
-      // Add 300ms idle buffer to registering a resize to help ensure data is sent when resize is actually complete
+      // Add 300ms idle buffer to help ensure data is sent when resize is actually complete
       resizeTimeout = setTimeout(function () {
         postResizeData(window.innerHeight, window.innerWidth);
       }, 300);
@@ -49,14 +50,6 @@ function addEventListenersToDOM() {
   }
 }
 
-// Generate numeric session IDs in the form XXXXXX-XXXXXX-XXXXXXXXX
-
-function generateSessionId() {
-  return `${Math.floor(100000 + Math.random() * 900000)}-${Math.floor(
-    100000 + Math.random() * 900000
-  )}-${Math.floor(100000000 + Math.random() * 900000000)}`;
-}
-
 // POST REQUESTS
 
 function postResizeData(finalHeight, finalWidth) {
@@ -68,8 +61,7 @@ function postResizeData(finalHeight, finalWidth) {
     initialDimensions: { height: initialHeight, width: initialWidth },
     finalDimensions: { height: finalHeight, width: finalWidth },
   };
-  console.log(jsonRequest);
-  axios.post(serverUrl, jsonRequest).then((error) => {
+  axios.post(`${serverUrl}/event`, jsonRequest).catch((error) => {
     console.log(error);
   });
 }
@@ -82,13 +74,12 @@ function postPasteData(elementId) {
     pasted: true,
     formId: elementId,
   };
-  console.log(jsonRequest);
-  axios.post(serverUrl, jsonRequest).then((error) => {
+  axios.post(`${serverUrl}/event`, jsonRequest).catch((error) => {
     console.log(error);
   });
 }
 
-function postTimerData(event, totalTime) {
+async function postTimerData(event, totalTime) {
   event.preventDefault();
   let jsonRequest = {
     eventType: "timeTaken",
@@ -96,10 +87,19 @@ function postTimerData(event, totalTime) {
     sessionId: sessionId,
     time: totalTime,
   };
-  console.log(jsonRequest);
-  axios
-    .post(serverUrl, jsonRequest)
-    .then((response) => location.reload)
+  // Ensure data is sent before reloading the page
+  await axios.post(`${serverUrl}/event`, jsonRequest).catch((error) => {
+    console.log(error);
+  });
+  location.reload(true);
+}
+
+// GET REQUESTS
+
+function getSessionId() {
+  return axios
+    .get(`${serverUrl}/session`)
+    .then((response) => response.data["session_id"])
     .catch((error) => {
       console.log(error);
     });
