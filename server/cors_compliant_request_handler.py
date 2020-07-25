@@ -1,9 +1,10 @@
+import time
 from http.server import SimpleHTTPRequestHandler
 from json import dumps, loads
 from random import randint
-from typing import List
 from threading import Lock
-import time
+from typing import List
+
 from data_struct import DataStruct
 from dimension import Dimension
 
@@ -14,14 +15,16 @@ class CORSCompliantRequestHandler(SimpleHTTPRequestHandler):
     lock = Lock()
 
     # Generate numeric session ID in the form XXXXXX-XXXXXX-XXXXXXXXX
-    def _generate_session_id(self):
+    @staticmethod
+    def _generate_session_id(session_ids):
         session_id = f"{randint(0, 999999)}-{randint(0, 999999)}-{randint(0, 999999999)}"
         # Ensure that we don't use the same session ID that someone else is using
-        while(session_id in self.session_ids):
+        while(session_id in session_ids):
             session_id = f"{randint(0, 999999)}-{randint(0, 999999)}-{randint(0, 999999999)}"
         return session_id
 
-    def _update_data_struct(self, session_struct_data, json_body):
+    @staticmethod
+    def _update_data_struct(session_struct_data, json_body):
         if json_body["eventType"] == "resize":
             session_struct_data.resize_from = Dimension(
                 json_body["initialDimensions"]["width"], json_body["initialDimensions"]["height"])
@@ -59,7 +62,7 @@ class CORSCompliantRequestHandler(SimpleHTTPRequestHandler):
             self.end_headers()
 
             # Send session ID to client
-            session_id = self._generate_session_id()
+            session_id = self._generate_session_id(self.session_ids)
             response = {}
             response["session_id"] = session_id
             self.wfile.write(bytes(dumps(response), "utf8"))
