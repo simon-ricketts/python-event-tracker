@@ -10,7 +10,7 @@ from dimension import Dimension
 
 
 class CORSCompliantRequestHandler(SimpleHTTPRequestHandler):
-    struct_dataset = []
+    data_structs = []
     session_ids = []
     lock = Lock()
 
@@ -23,21 +23,22 @@ class CORSCompliantRequestHandler(SimpleHTTPRequestHandler):
             session_id = f"{randint(0, 999999)}-{randint(0, 999999)}-{randint(0, 999999999)}"
         return session_id
 
+    # Update data structure based on eventType
     @staticmethod
-    def _update_data_struct(session_struct_data, json_body):
+    def _update_data_struct(session_data_struct, json_body):
         if json_body["eventType"] == "resize":
-            session_struct_data.resize_from = Dimension(
+            session_data_struct.resize_from = Dimension(
                 json_body["initialDimensions"]["width"], json_body["initialDimensions"]["height"])
-            session_struct_data.resize_to = Dimension(
+            session_data_struct.resize_to = Dimension(
                 json_body["finalDimensions"]["width"], json_body["finalDimensions"]["height"])
-            print(session_struct_data)
+            print(session_data_struct)
         elif json_body["eventType"] == "copyAndPaste":
-            session_struct_data.copy_and_paste[json_body["formId"]] = True
-            print(session_struct_data)
+            session_data_struct.copy_and_paste[json_body["formId"]] = True
+            print(session_data_struct)
         elif json_body["eventType"] == "timeTaken":
-            session_struct_data.form_completion_time = json_body["time"]
-            print(session_struct_data)
-            print("!!! DATA_STRUCT COMPLETE !!!")
+            session_data_struct.form_completion_time = json_body["time"]
+            print(session_data_struct)
+            print("!!! DATA STRUCT COMPLETE !!!")
         else:
             print("Unrecognised 'eventType' value")
 
@@ -66,16 +67,16 @@ class CORSCompliantRequestHandler(SimpleHTTPRequestHandler):
             response = {}
             response["session_id"] = session_id
             self.wfile.write(bytes(dumps(response), "utf8"))
-            new_struct_dataset = DataStruct(
+            new_data_struct = DataStruct(
                 self.client_address[0], response["session_id"], None, None, {}, None)
 
-            # Ensure no two threads are using struct_dataset and session_ids
+            # Ensure no two threads are using data_structs and session_ids
             self.lock.acquire()
             self.session_ids.append(session_id)
-            self.struct_dataset.append(new_struct_dataset)
+            self.data_structs.append(new_data_struct)
             self.lock.release()
 
-            print(new_struct_dataset)
+            print(new_data_struct)
 
     def do_POST(self):
         if self.path == "/event":
@@ -89,10 +90,10 @@ class CORSCompliantRequestHandler(SimpleHTTPRequestHandler):
             data = self.rfile.read(dataLength).decode('utf-8')
             json_body = loads(data)
             try:
-                # Ensure no two threads are using struct_dataset
+                # Ensure no two threads are using data_structs
                 self.lock.acquire()
                 session_data_struct = next(
-                    data_struct for data_struct in self.struct_dataset if data_struct.session_id == json_body["sessionId"])
+                    data_struct for data_struct in self.data_structs if data_struct.session_id == json_body["sessionId"])
                 self._update_data_struct(session_data_struct, json_body)
                 self.lock.release()
             except StopIteration:
