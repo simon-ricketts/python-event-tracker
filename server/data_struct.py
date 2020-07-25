@@ -1,5 +1,6 @@
-from typing import Dict
 from dataclasses import dataclass
+from typing import Dict
+
 from dimension import Dimension
 
 
