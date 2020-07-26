@@ -4,7 +4,7 @@
 
 A Python installation of 3.7 is required.
 
-The [Client Server](###Client-Server) relies on the [Web Server](###Web-Server) to be running so that it can fetch a `session_id` from it, ensure that this is the case
+The [Client Server](#client-server) relies on the [Web Server](#web-server) to be running so that it can fetch a `session_id` from it, ensure that this is the case
 
 ### Web Server
 
@@ -24,7 +24,7 @@ python -m http.server 8080
 
 http://127.0.0.1:8080 will now be hosting [index.html](client/index.html)
 
-### Testing
+## Testing
 
 `cd server`
 
