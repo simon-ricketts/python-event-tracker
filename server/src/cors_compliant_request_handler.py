@@ -48,7 +48,9 @@ class CORSCompliantRequestHandler(SimpleHTTPRequestHandler):
             )
             return session_data_struct
         elif json_body["eventType"] == "copyAndPaste":
-            session_data_struct.copy_and_paste[json_body["formId"]] = True
+            session_data_struct.copy_and_paste[json_body["formId"]] = json_body[
+                "pasted"
+            ]
             return session_data_struct
         elif json_body["eventType"] == "timeTaken":
             session_data_struct.form_completion_time = json_body["time"]
@@ -100,8 +102,9 @@ class CORSCompliantRequestHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
         if self.path == "/event":
             # Setup headers for response
-            self.send_response(201, "CREATED")
+            self.send_response(200, "OK")
             self._send_cors_headers()
+            self.send_header("Content-Type", "application/json")
             self.end_headers()
 
             # Get length of byte stream, decode it, and load it into JSON format
@@ -116,6 +119,9 @@ class CORSCompliantRequestHandler(SimpleHTTPRequestHandler):
                     json_body["sessionId"], self.data_structs
                 )
                 print(self._update_data_struct(session_data_struct, json_body))
+                response = {}
+                response["message"] = f"DataStruct {json_body['sessionId']} updated"
+                self.wfile.write(bytes(dumps(response), "utf8"))
             except StopIteration:
                 print(
                     f"ERROR - No DataStruct found with 'sessionId': {json_body['sessionId']}"
