@@ -6,6 +6,8 @@ A Python installation of 3.7 is required.
 
 The client relies on the [Web Server](#web-server) to be running first so that it can fetch a `session_id` from it, ensure that this is the case
 
+A [makefile](/makefile) has been provided with all the necessary commands needed to run the code, though explanations are provided below for manual operation
+
 ### Web Server
 
 ```
