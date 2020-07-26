@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict
 
-from dimension import Dimension
+from src.dimension import Dimension
 
 
 @dataclass

@@ -5,8 +5,9 @@ from random import randint
 from threading import Lock
 from typing import List
 
-from data_struct import DataStruct
-from dimension import Dimension
+from src.data_struct import DataStruct
+from src.dimension import Dimension
+from src.invalid_event_exception import InvalidEventException
 
 
 class CORSCompliantRequestHandler(SimpleHTTPRequestHandler):
@@ -17,37 +18,52 @@ class CORSCompliantRequestHandler(SimpleHTTPRequestHandler):
     # Generate numeric session ID in the form XXXXXX-XXXXXX-XXXXXXXXX
     @staticmethod
     def _generate_session_id(session_ids):
-        session_id = f"{randint(0, 999999)}-{randint(0, 999999)}-{randint(0, 999999999)}"
+        session_id = f"{randint(100000, 999999)}-{randint(100000, 999999)}-{randint(100000000, 999999999)}"
         # Ensure that we don't use the same session ID that someone else is using
-        while(session_id in session_ids):
-            session_id = f"{randint(0, 999999)}-{randint(0, 999999)}-{randint(0, 999999999)}"
+        while session_id in session_ids:
+            session_id = f"{randint(100000, 999999)}-{randint(100000, 999999)}-{randint(100000000, 999999999)}"
         return session_id
+
+    # Find data_struct with matching session_id value
+    @staticmethod
+    def _find_data_struct(session_id, data_structs):
+        session_data_struct = next(
+            data_struct
+            for data_struct in data_structs
+            if data_struct.session_id == session_id
+        )
+        return session_data_struct
 
     # Update data structure based on eventType
     @staticmethod
     def _update_data_struct(session_data_struct, json_body):
         if json_body["eventType"] == "resize":
             session_data_struct.resize_from = Dimension(
-                json_body["initialDimensions"]["width"], json_body["initialDimensions"]["height"])
+                json_body["initialDimensions"]["width"],
+                json_body["initialDimensions"]["height"],
+            )
             session_data_struct.resize_to = Dimension(
-                json_body["finalDimensions"]["width"], json_body["finalDimensions"]["height"])
-            print(session_data_struct)
+                json_body["finalDimensions"]["width"],
+                json_body["finalDimensions"]["height"],
+            )
+            return session_data_struct
         elif json_body["eventType"] == "copyAndPaste":
             session_data_struct.copy_and_paste[json_body["formId"]] = True
-            print(session_data_struct)
+            return session_data_struct
         elif json_body["eventType"] == "timeTaken":
             session_data_struct.form_completion_time = json_body["time"]
-            print(session_data_struct)
             print("!!! DATA STRUCT COMPLETE !!!")
+            return session_data_struct
         else:
-            print("Unrecognised 'eventType' value")
+            raise InvalidEventException("Unrecognised 'eventType' value")
 
     # Add headers to allow requests to occur between domains
     def _send_cors_headers(self):
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header("Access-Control-Allow-Headers",
-                         "X-Requested-With, Content-type")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header(
+            "Access-Control-Allow-Headers", "X-Requested-With, Content-type"
+        )
 
     def do_OPTIONS(self):
         self.send_response(200, "OK")
@@ -67,8 +83,11 @@ class CORSCompliantRequestHandler(SimpleHTTPRequestHandler):
             response = {}
             response["session_id"] = session_id
             self.wfile.write(bytes(dumps(response), "utf8"))
+            print("!!! NEW SESSION GENERATED !!!")
+            # Pull website URL from client address tuple provided by client's packet
             new_data_struct = DataStruct(
-                self.client_address[0], response["session_id"], None, None, {}, None)
+                self.client_address[0], response["session_id"], None, None, {}, None
+            )
 
             # Ensure no two threads are using data_structs and session_ids
             self.lock.acquire()
@@ -87,15 +106,20 @@ class CORSCompliantRequestHandler(SimpleHTTPRequestHandler):
 
             # Get length of byte stream, decode it, and load it into JSON format
             dataLength = int(self.headers["Content-Length"])
-            data = self.rfile.read(dataLength).decode('utf-8')
+            data = self.rfile.read(dataLength).decode("utf-8")
             json_body = loads(data)
+
+            # Ensure no two threads are using data_structs
+            self.lock.acquire()
             try:
-                # Ensure no two threads are using data_structs
-                self.lock.acquire()
-                session_data_struct = next(
-                    data_struct for data_struct in self.data_structs if data_struct.session_id == json_body["sessionId"])
-                self._update_data_struct(session_data_struct, json_body)
-                self.lock.release()
+                session_data_struct = self._find_data_struct(
+                    json_body["sessionId"], self.data_structs
+                )
+                print(self._update_data_struct(session_data_struct, json_body))
             except StopIteration:
                 print(
-                    f"ERROR - No DataStruct found with session_id: {json_body['sessionId']}")
+                    f"ERROR - No DataStruct found with 'sessionId': {json_body['sessionId']}"
+                )
+            except InvalidEventException:
+                print(f"ERROR - Invalid 'eventType' provided: {json_body['eventType']}")
+            self.lock.release()
