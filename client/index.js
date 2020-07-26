@@ -56,7 +56,6 @@ function postResizeData(finalHeight, finalWidth) {
   hasResized = true;
   let jsonRequest = {
     eventType: "resize",
-    websiteUrl: window.location.href,
     sessionId: sessionId,
     initialDimensions: { height: initialHeight, width: initialWidth },
     finalDimensions: { height: finalHeight, width: finalWidth },
@@ -69,7 +68,6 @@ function postResizeData(finalHeight, finalWidth) {
 function postPasteData(elementId) {
   let jsonRequest = {
     eventType: "copyAndPaste",
-    websiteUrl: window.location.href,
     sessionId: sessionId,
     pasted: true,
     formId: elementId,
@@ -83,7 +81,6 @@ async function postTimerData(event, totalTime) {
   event.preventDefault();
   let jsonRequest = {
     eventType: "timeTaken",
-    websiteUrl: window.location.href,
     sessionId: sessionId,
     time: totalTime,
   };
