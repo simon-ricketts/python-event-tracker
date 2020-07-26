@@ -10,7 +10,7 @@ The client relies on the [Web Server](#web-server) to be running first so that i
 
 ```
 cd server
-python main.py
+python3 main.py
 ```
 
 The server uses the constants `ADDR` and `PORT` in [constant.py](server/src/constants.py) to determine its web address, their default values will host the web server at http://127.0.0.1:8000
@@ -21,7 +21,7 @@ The server uses the constants `ADDR` and `PORT` in [constant.py](server/src/cons
 
 ```
 cd server
-python -m unittest discover -v test/unit
+python3 -m unittest discover -v test/unit
 ```
 
 ### Integration Tests
@@ -32,14 +32,14 @@ In a separate terminal run the following commands to open a server in test mode:
 
 ```
 cd server
-python main.py -t
+python3 main.py -t
 ```
 
 Following this, in your original terminal run:
 
 ```
 cd server
-python -m unittest discover -v test/integration
+python3 -m unittest discover -v test/integration
 ```
 
 ## Summary
