@@ -37,6 +37,11 @@ function addEventListenersToDOM() {
   for (i = 0; i < inputFields.length; i++) {
     let inputFieldId = inputFields[i].id;
     inputFields[i].addEventListener("input", startTimer);
+    /*
+    Wasn't sure whether the exercise wanted both Copy AND Paste tracking; The example server-side Data
+    template shows a map being used for CopyAndPaste with 1-to-1 mappings between a string (fieldId) and a bool which suggests
+    only one event should be tracked? I have therefore assumed that we are tracking Paste events.
+    */
     inputFields[i].addEventListener("paste", function () {
       postPasteData(inputFieldId);
     });
