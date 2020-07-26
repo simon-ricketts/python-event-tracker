@@ -9,7 +9,8 @@ The [Client Server](###Client-Server) relies on the [Web Server](###Web-Server) 
 ### Web Server
 
 ```
-python server/main.py
+cd server
+python main.py
 ```
 
 The server uses the constants `ADDR` and `PORT` to determine its web address, their default values will host the web server at http://127.0.0.1:8000
@@ -22,6 +23,13 @@ python -m http.server 8080
 ```
 
 http://127.0.0.1:8080 will now be hosting [index.html](client/index.html)
+
+### Testing
+
+`cd server`
+
+- Unit Tests: `python -m unittest discover -v test/unit`
+- Integration Tests: `python -m unittest discover -v test/integration`
 
 ## Summary
 
