@@ -1,20 +1,32 @@
+import argparse
 import json
-from http.server import HTTPServer
-from socketserver import ThreadingMixIn
 
+from src.constants import ADDR, PORT
 from src.cors_compliant_request_handler import CORSCompliantRequestHandler
+from src.data_struct import DataStruct
+from src.threaded_http_server import ThreadedHTTPServer
 
-ADDR = "127.0.0.1"
-PORT = 8000
-
-
-# Create a ThreadedHTTPServer by inheriting ThreadingMixIn and HTTPServer
-# Inherit ThreadingMixIn first to override related methods in HTTPServer
-class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
-    pass
-
-
-if __name__ == "__main__":
-    httpd = ThreadedHTTPServer((ADDR, PORT), CORSCompliantRequestHandler)
+# Set up an argument parser to allow a 'test' mode to be used when running main.py
+parser = argparse.ArgumentParser(
+    description="Run a threaded HTTPServer with custom request handler"
+)
+parser.add_argument(
+    "-t",
+    "--test",
+    action="store_true",
+    help="Runs the server in test mode for use in integration tests",
+)
+args = parser.parse_args()
+# If in test mode, add a dummy data struct to be used to verify POST routes
+if args.test:
+    CORSCompliantRequestHandler.data_structs.append(
+        DataStruct(None, "TEST_SESSION_ID", None, None, {}, None)
+    )
+    print(f"Hosting test server at {ADDR}:{PORT}")
+else:
     print(f"Hosting server at {ADDR}:{PORT}")
-    httpd.serve_forever()
+
+
+# Host the server
+httpd = ThreadedHTTPServer((ADDR, PORT), CORSCompliantRequestHandler)
+httpd.serve_forever()

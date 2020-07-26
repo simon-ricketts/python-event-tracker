@@ -4,7 +4,7 @@
 
 A Python installation of 3.7 is required.
 
-The [Client Server](#client-server) relies on the [Web Server](#web-server) to be running so that it can fetch a `session_id` from it, ensure that this is the case
+The client relies on the [Web Server](#web-server) to be running first so that it can fetch a `session_id` from it, ensure that this is the case
 
 ### Web Server
 
@@ -13,23 +13,34 @@ cd server
 python main.py
 ```
 
-The server uses the constants `ADDR` and `PORT` to determine its web address, their default values will host the web server at http://127.0.0.1:8000
-
-### Client Server
-
-```
-cd client
-python -m http.server 8080
-```
-
-http://127.0.0.1:8080 will now be hosting [index.html](client/index.html)
+The server uses the constants `ADDR` and `PORT` in [constant.py](server/src/constants.py) to determine its web address, their default values will host the web server at http://127.0.0.1:8000
 
 ## Testing
 
-`cd server`
+### Unit Tests
 
-- Unit Tests: `python -m unittest discover -v test/unit`
-- Integration Tests: `python -m unittest discover -v test/integration`
+```
+cd server
+python -m unittest discover -v test/unit
+```
+
+### Integration Tests
+
+Integration tests rely on a test version of the server with dummy data to be running first.
+
+In a separate terminal run the following commands to open a server in test mode:
+
+```
+cd server
+python main.py -t
+```
+
+Following this, in your original terminal run:
+
+```
+cd server
+python -m unittest discover -v test/integration
+```
 
 ## Summary
 
