@@ -26,7 +26,6 @@ if args.test:
 else:
     print(f"Hosting server at {ADDR}:{PORT}")
 
-
 # Host the server
 httpd = ThreadedHTTPServer((ADDR, PORT), CORSCompliantRequestHandler)
 httpd.serve_forever()
