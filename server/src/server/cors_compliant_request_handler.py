@@ -5,9 +5,9 @@ from random import randint
 from threading import Lock
 from typing import List
 
-from src.data_struct import DataStruct
-from src.dimension import Dimension
-from src.invalid_event_exception import InvalidEventException
+from src.data.data_struct import DataStruct
+from src.data.dimension import Dimension
+from src.exceptions.invalid_event_exception import InvalidEventException
 
 
 class CORSCompliantRequestHandler(SimpleHTTPRequestHandler):

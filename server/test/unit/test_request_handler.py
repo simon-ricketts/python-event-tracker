@@ -2,10 +2,10 @@ import unittest
 import unittest.mock
 from io import StringIO
 
-from src.cors_compliant_request_handler import CORSCompliantRequestHandler
-from src.data_struct import DataStruct
-from src.dimension import Dimension
-from src.invalid_event_exception import InvalidEventException
+from src.data.data_struct import DataStruct
+from src.data.dimension import Dimension
+from src.exceptions.invalid_event_exception import InvalidEventException
+from src.server.cors_compliant_request_handler import CORSCompliantRequestHandler
 
 
 class TestRequestHandler(unittest.TestCase):

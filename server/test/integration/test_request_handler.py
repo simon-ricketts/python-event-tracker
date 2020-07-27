@@ -6,7 +6,7 @@ from http.server import HTTPServer
 
 import requests
 
-from src.constants import ADDR, PORT
+from src.constants.constants import ADDR, PORT
 
 
 class TestRequestHandler(unittest.TestCase):

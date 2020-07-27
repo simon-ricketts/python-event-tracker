@@ -1,10 +1,10 @@
 import argparse
 import json
 
-from src.constants import ADDR, PORT
-from src.cors_compliant_request_handler import CORSCompliantRequestHandler
-from src.data_struct import DataStruct
-from src.threaded_http_server import ThreadedHTTPServer
+from src.constants.constants import ADDR, PORT
+from src.data.data_struct import DataStruct
+from src.server.cors_compliant_request_handler import CORSCompliantRequestHandler
+from src.server.threaded_http_server import ThreadedHTTPServer
 
 # Set up an argument parser to allow a 'test' mode to be used when running main.py
 parser = argparse.ArgumentParser(
