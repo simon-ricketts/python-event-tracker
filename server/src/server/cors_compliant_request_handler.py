@@ -3,21 +3,24 @@ from http.server import SimpleHTTPRequestHandler
 from json import dumps, loads
 from random import randint
 from threading import Lock
-from typing import List
+from typing import Any, Dict, List
 
 from src.data.data_struct import DataStruct
 from src.data.dimension import Dimension
 from src.exceptions.invalid_event_exception import InvalidEventException
+from src.exceptions.invalid_session_data_struct_exception import (
+    InvalidSessionDataStructException,
+)
 
 
 class CORSCompliantRequestHandler(SimpleHTTPRequestHandler):
-    data_structs = []
-    session_ids = []
-    lock = Lock()
+    data_structs: List[DataStruct] = []
+    session_ids: List[str] = []
+    lock: Lock = Lock()
 
     # Generate numeric session ID in the form XXXXXX-XXXXXX-XXXXXXXXX
     @staticmethod
-    def _generate_session_id(session_ids):
+    def _generate_session_id(session_ids: List[str]) -> str:
         session_id = f"{randint(100000, 999999)}-{randint(100000, 999999)}-{randint(100000000, 999999999)}"
         # Ensure that we don't use the same session ID that someone else is using
         while session_id in session_ids:
@@ -26,17 +29,26 @@ class CORSCompliantRequestHandler(SimpleHTTPRequestHandler):
 
     # Find data_struct with matching session_id value
     @staticmethod
-    def _find_data_struct(session_id, data_structs):
-        session_data_struct = next(
-            data_struct
-            for data_struct in data_structs
-            if data_struct.session_id == session_id
-        )
-        return session_data_struct
+    def _find_data_struct(
+        session_id: str, data_structs: List[DataStruct]
+    ) -> DataStruct:
+        try:
+            session_data_struct = next(
+                data_struct
+                for data_struct in data_structs
+                if data_struct.session_id == session_id
+            )
+            return session_data_struct
+        except StopIteration:
+            raise InvalidSessionDataStructException(
+                f"No DataStruct found with 'sessionId': {session_id}"
+            )
 
     # Update data structure based on eventType
     @staticmethod
-    def _update_data_struct(session_data_struct, json_body):
+    def _update_data_struct(
+        session_data_struct: DataStruct, json_body: Dict[str, Any]
+    ) -> DataStruct:
         if json_body["eventType"] == "resize":
             session_data_struct.resize_from = Dimension(
                 json_body["resizeFrom"]["width"], json_body["resizeFrom"]["height"],
@@ -55,22 +67,24 @@ class CORSCompliantRequestHandler(SimpleHTTPRequestHandler):
             print("!!! DATA STRUCT COMPLETE !!!")
             return session_data_struct
         else:
-            raise InvalidEventException("Unrecognised 'eventType' value")
+            raise InvalidEventException(
+                f"Unrecognised 'eventType' value: {json_body['eventType']}"
+            )
 
     # Add headers to allow requests to occur between domains
-    def _send_cors_headers(self):
+    def _send_cors_headers(self) -> None:
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header(
             "Access-Control-Allow-Headers", "X-Requested-With, Content-type"
         )
 
-    def do_OPTIONS(self):
+    def do_OPTIONS(self) -> None:
         self.send_response(200, "OK")
         self._send_cors_headers()
         self.end_headers()
 
-    def do_GET(self):
+    def do_GET(self) -> None:
         if self.path == "/session":
             # Setup headers for response
             self.send_response(200, "OK")
@@ -94,10 +108,9 @@ class CORSCompliantRequestHandler(SimpleHTTPRequestHandler):
             self.session_ids.append(session_id)
             self.data_structs.append(new_data_struct)
             self.lock.release()
-
             print(new_data_struct)
 
-    def do_POST(self):
+    def do_POST(self) -> None:
         if self.path == "/event":
             # Setup headers for response
             self.send_response(200, "OK")
@@ -120,10 +133,8 @@ class CORSCompliantRequestHandler(SimpleHTTPRequestHandler):
                 response = {}
                 response["message"] = f"DataStruct {json_body['sessionId']} updated"
                 self.wfile.write(bytes(dumps(response), "utf8"))
-            except StopIteration:
-                print(
-                    f"ERROR - No DataStruct found with 'sessionId': {json_body['sessionId']}"
-                )
-            except InvalidEventException:
-                print(f"ERROR - Invalid 'eventType' provided: {json_body['eventType']}")
+            except InvalidSessionDataStructException as e:
+                print(e)
+            except InvalidEventException as e:
+                print(e)
             self.lock.release()

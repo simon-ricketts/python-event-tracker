@@ -5,16 +5,19 @@ from io import StringIO
 from src.data.data_struct import DataStruct
 from src.data.dimension import Dimension
 from src.exceptions.invalid_event_exception import InvalidEventException
+from src.exceptions.invalid_session_data_struct_exception import (
+    InvalidSessionDataStructException,
+)
 from src.server.cors_compliant_request_handler import CORSCompliantRequestHandler
 
 
 class TestRequestHandler(unittest.TestCase):
-    def test_generate_session_id_matches_regex(self):
+    def test_generate_session_id_matches_regex(self) -> None:
         # Check that generated session ID matches regex for XXXXXX-XXXXXX-XXXXXXXXX
         session_id = CORSCompliantRequestHandler._generate_session_id([])
         self.assertRegex(session_id, r"^\d{6}-\d{6}-\d{9}$")
 
-    def test_find_data_struct_returns_data_struct(self):
+    def test_find_data_struct_returns_data_struct(self) -> None:
         # Check that data_struct can be found
         data_structs = [DataStruct(None, "SESSION ID", None, None, {}, None)]
         expected_session_data_struct = DataStruct(
@@ -25,16 +28,17 @@ class TestRequestHandler(unittest.TestCase):
             expected_session_data_struct,
         )
 
-    def test_find_data_struct_raises_stop_iteration(self):
-        # Check that method throws StopIteration exception on failure to find
-        self.assertRaises(
-            StopIteration,
+    def test_find_data_struct_raises_for_unfound_data_struct(self) -> None:
+        # Check that method throws InvalidSessionDataStructException with valid message on failure to find
+        self.assertRaisesRegex(
+            InvalidSessionDataStructException,
+            "No DataStruct found with 'sessionId': NO SUCH SESSION ID",
             CORSCompliantRequestHandler._find_data_struct,
             "NO SUCH SESSION ID",
             [],
         )
 
-    def test_update_data_struct_for_resize_event(self):
+    def test_update_data_struct_for_resize_event(self) -> None:
         # Check resize eventType updates correct fields
         session_data_struct = DataStruct(None, None, None, None, {}, None)
         json_body = {
@@ -53,7 +57,7 @@ class TestRequestHandler(unittest.TestCase):
             expected_updated_session_data_struct, actual_updated_session_data_struct
         )
 
-    def test_update_data_struct_for_paste_event(self):
+    def test_update_data_struct_for_paste_event(self) -> None:
         # Check copyAndPaste eventType updates correct fields
         session_data_struct = DataStruct(None, None, None, None, {}, None)
         json_body = {
@@ -74,7 +78,9 @@ class TestRequestHandler(unittest.TestCase):
 
     # Create a mock to capture print output, passing it in as the argument 'mock_stdout'
     @unittest.mock.patch("sys.stdout", new_callable=StringIO)
-    def test_update_data_struct_for_time_taken_event(self, mock_stdout):
+    def test_update_data_struct_for_time_taken_event(
+        self, mock_stdout: StringIO
+    ) -> None:
         # Check timeTaken eventType updates correct fields and prints complete message
         session_data_struct = DataStruct(None, None, None, None, {}, None)
         json_body = {
@@ -93,15 +99,16 @@ class TestRequestHandler(unittest.TestCase):
         )
         self.assertEqual(mock_stdout.getvalue(), "!!! DATA STRUCT COMPLETE !!!\n")
 
-    def test_update_data_struct_raises_for_invalid_event(self):
+    def test_update_data_struct_raises_for_invalid_event(self) -> None:
         # Check that method throws InvalidEventException on incorrect eventType
         session_data_struct = DataStruct(None, None, None, None, {}, None)
         json_body = {
             "eventType": "notAnEvent",
             "sessionId": None,
         }
-        self.assertRaises(
+        self.assertRaisesRegex(
             InvalidEventException,
+            "Unrecognised 'eventType' value: notAnEvent",
             CORSCompliantRequestHandler._update_data_struct,
             session_data_struct,
             json_body,
