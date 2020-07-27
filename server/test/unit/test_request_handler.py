@@ -40,8 +40,8 @@ class TestRequestHandler(unittest.TestCase):
         json_body = {
             "eventType": "resize",
             "sessionId": None,
-            "initialDimensions": {"width": "1920", "height": "1080"},
-            "finalDimensions": {"width": "1280", "height": "720"},
+            "resizeFrom": {"width": "1920", "height": "1080"},
+            "resizeTo": {"width": "1280", "height": "720"},
         }
         expected_updated_session_data_struct = DataStruct(
             None, None, Dimension("1920", "1080"), Dimension("1280", "720"), {}, None,

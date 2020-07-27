@@ -39,12 +39,10 @@ class CORSCompliantRequestHandler(SimpleHTTPRequestHandler):
     def _update_data_struct(session_data_struct, json_body):
         if json_body["eventType"] == "resize":
             session_data_struct.resize_from = Dimension(
-                json_body["initialDimensions"]["width"],
-                json_body["initialDimensions"]["height"],
+                json_body["resizeFrom"]["width"], json_body["resizeFrom"]["height"],
             )
             session_data_struct.resize_to = Dimension(
-                json_body["finalDimensions"]["width"],
-                json_body["finalDimensions"]["height"],
+                json_body["resizeTo"]["width"], json_body["resizeTo"]["height"],
             )
             return session_data_struct
         elif json_body["eventType"] == "copyAndPaste":

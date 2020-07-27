@@ -62,8 +62,8 @@ function postResizeData(finalHeight, finalWidth) {
   let jsonRequest = {
     eventType: "resize",
     sessionId: sessionId,
-    initialDimensions: { height: initialHeight, width: initialWidth },
-    finalDimensions: { height: finalHeight, width: finalWidth },
+    resizeFrom: { width: initialWidth, height: initialHeight },
+    resizeTo: { width: finalWidth, height: finalHeight },
   };
   axios.post(`${serverUrl}/event`, jsonRequest).catch((error) => {
     console.log(error);
